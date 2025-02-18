@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 
 export default function Home() {
   return(
+    <div>
     <header class = "main">
       <div id= "navigation">
       <ul>
@@ -21,5 +22,16 @@ export default function Home() {
       </ul>
       </div>
     </header>
+    <div className="image-container">
+    <Image 
+          src="https://motionarray.imgix.net/preview-70417GayIL9G01E_0009.jpg?w=660&q=60&fit=max&auto=format"
+          alt="Descriptive text for the image"
+          width={800} 
+          height={400} 
+          className="rounded-lg shadow-lg"
+          />
+    </div>
+    
+    </div>
   );
 }
