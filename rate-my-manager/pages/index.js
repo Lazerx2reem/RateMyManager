@@ -22,7 +22,10 @@ export default function Home() {
       </ul>
       </div>
     </header>
-
+    <Image
+        src="/Rate_My_Manager_logo.png"
+        width={300}
+        height={200}/>
     </div>
   );
 }
