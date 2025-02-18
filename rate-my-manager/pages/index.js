@@ -20,7 +20,6 @@ export default function Home() {
         <li><a href="#">Sign Up</a></li>
       </ul>
       </div>
-
     </header>
   );
 }
