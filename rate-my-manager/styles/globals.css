@@ -22,7 +22,7 @@ body {
   padding: 0;
 }
 
-#navigation{
+div.navigation{
   list-style: none;
   background-color: #C8A2C8;
   display: flex;

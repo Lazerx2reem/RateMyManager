@@ -15,13 +15,14 @@ export default function Home() {
   return(
     <div>
     <header class = "main">
-      <div id= "navigation">
+      <div class= "navigation">
       <ul>
         <li><a href = "#">Login</a></li>
         <li><a href="#">Sign Up</a></li>
       </ul>
       </div>
     </header>
+
     </div>
   );
 }
