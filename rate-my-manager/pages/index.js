@@ -13,6 +13,14 @@ const geistMono = Geist_Mono({
 
 export default function Home() {
   return(
-    <h1>Hello World</h1>
+    <header class = "main">
+      <div id= "navigation">
+      <ul>
+        <li><a href = "#">Login</a></li>
+        <li><a href="#">Sign Up</a></li>
+      </ul>
+      </div>
+
+    </header>
   );
 }
