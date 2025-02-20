@@ -17,7 +17,7 @@ export default function Home() {
     <header class = "main">
       <div class= "navigation">
       <ul>
-        <li><a href = "#">Login</a></li>
+        <li><a href = "login.js">Login</a></li>
         <li><a href="#">Sign Up</a></li>
       </ul>
       </div>
