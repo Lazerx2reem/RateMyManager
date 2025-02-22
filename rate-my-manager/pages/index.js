@@ -1,5 +1,8 @@
 import Image from "next/image";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
+import HomeNavbar from "../components/HomeNavbar";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,15 +17,8 @@ const geistMono = Geist_Mono({
 export default function Home() {
   return(
     <div>
-    <header class = "main">
-      <div class= "navigation">
-      <ul>
-        <li><a href = "login.js">Login</a></li>
-        <li><a href="#">Sign Up</a></li>
-      </ul>
-      </div>
-    </header>
-    <Image
+      <HomeNavbar />
+    <Image 
         src="/Rate_My_Manager_logo.png"
         width={300}
         height={200}/>

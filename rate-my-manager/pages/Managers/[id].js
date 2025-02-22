@@ -6,6 +6,7 @@ export default function ManagerProfile(props) {
 
   return (
     <div className="p-6">
+      <ManagerNavbar /> {/* ✅ Different navbar for profile */}
       <h1 className="text-2xl font-bold">Manager Profile: {name}</h1>
       <p>Ratings and reviews will be displayed here.</p>
     </div>

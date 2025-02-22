@@ -14,7 +14,6 @@
   }
 }
 
-/* styles/globals.css */
 body {
   font-family: sans-serif;
   background-color: white;
@@ -43,4 +42,32 @@ header ul li a{
   align-items: center;
   font-size: large;
   font-weight: bold;
+}
+
+.navbar {
+  background-color:#C8A2C8 ;
+  padding: 1rem;
+}
+
+.navbar ul{
+  display: flex;
+  justify-content: end;
+  list-style: none;
+  padding: 1px;
+  margin: 1px;
+}
+
+.navbar li {
+  margin-left: 2rem;
+}
+
+.navbar a {
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.navbar a:hover {
+  color: black;
 }
