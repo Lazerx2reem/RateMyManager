@@ -71,3 +71,37 @@ header ul li a{
 .navbar a:hover {
   color: black;
 }
+
+.ManagerProfile h1{
+  text-align: left;
+  font-weight: bold;
+  font-size: 42px;
+  margin-bottom: 3rem;
+  margin-top: 4rem;
+  
+}
+
+.ManagerProfile h2{
+  text-align: left;
+  font-size: x-large;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+}
+
+.AverageRatingValue {
+  line-height: 1.75rem;
+  margin-left: 0.5rem;
+  margin-bottom: 2rem;
+  font-size: 2rem; /* Adjust as needed */
+  font-weight: bold;
+  color: #6B46C1;
+}
+
+.average-rating-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4A4A4A;
+  margin-bottom: 2rem;
+  padding: 0.5rem;
+}
