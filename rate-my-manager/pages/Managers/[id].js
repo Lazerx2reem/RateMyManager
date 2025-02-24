@@ -2,16 +2,17 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import ManagerNavbar from "../../components/ManagerNavbar";
 import Link from "next/link";
+import { sample } from "../Managers/sample"
 
 export default function ManagerProfile() {
   const router = useRouter();
   const { id } = router.query;  // Retrieve the manager's ID or name from the URL
   const [manager, setManager] = useState(null);
 
-  // Only run once id is available
   useEffect(() => {
     if (id) {
-      setManager(id);  // Set manager based on id
+      const foundManager = sample.find((m) => m.id === id);
+      setManager(foundManager || { name: "Unknown", company: "N/A", reviews: [] });
     }
   }, [id]);
 
@@ -51,6 +52,22 @@ export default function ManagerProfile() {
         <h2>Average Rating</h2>
           <span className="AverageRatingValue">{averageRating}</span>
           <span className="average-rating-text ml-2 text-lg">/ 5</span>
+          {manager.reviews.length > 0 ? (
+  <ul className="mt-4 space-y-4">
+    {manager.reviews.map((review) => (
+      <li key={review.id} className="border p-4 rounded-lg shadow-md">
+        <div className="flex justify-between items-center">
+          <span className="font-bold">Anonymous</span>
+          <span>{review.rating} / 5</span>
+        </div>
+        <p className="text-gray-500 text-sm">{review.date}</p>
+        <p className="mt-2">{review.comment}</p>
+      </li>
+    ))}
+  </ul>
+) : (
+  <p>No reviews available.</p>
+)}
       </div>
 
       <div className="write-review">
