@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { auth } from "/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import ProfileNavbar from "../components/ProfileNavbar";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -28,6 +29,8 @@ export default function Dashboard() {
   if (!user) return <div className="text-center mt-10">Loading...</div>;
 
   return (
+    <div>
+      <ProfileNavbar />
     <div className="flex flex-col items-center justify-center min-h-screen bg-purple-50">
       <h1 className="text-4xl font-bold text-purple-700 mb-4">Dashboard</h1>
       <div className="bg-white shadow-lg rounded-lg p-6 w-80 text-center">
@@ -41,5 +44,6 @@ export default function Dashboard() {
         </button>
       </div>
     </div>
+  </div>
   );
 }
