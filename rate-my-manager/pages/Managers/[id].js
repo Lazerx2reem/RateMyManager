@@ -1,20 +1,51 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import ManagerNavbar from "../../components/ManagerNavbar";
-import Link from "next/link";
-import { sample } from "../Managers/sample"
+import { db } from "../../firebase";
+import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 
 export default function ManagerProfile() {
   const router = useRouter();
   const { id } = router.query;  // Retrieve the manager's ID or name from the URL
   const [manager, setManager] = useState(null);
+  const [newReview, setNewReview] = useState("");
 
   useEffect(() => {
     if (id) {
-      const foundManager = sample.find((m) => m.id === id);
-      setManager(foundManager || { name: "Unknown", company: "N/A", reviews: [] });
+      const fetchManager = async () => {
+        const managerRef = doc(db, "managers", id);
+        const managerSnap = await getDoc(managerRef);
+
+        if (managerSnap.exists()) {
+          setManager({ id, ...managerSnap.data() });
+        } else {
+          setManager({ name: "Unknown", reviews: [] });
+        }
+      };
+
+      fetchManager();
     }
   }, [id]);
+
+  const handleAddReview = async () => {
+    if (!newReview.trim()) return;
+
+    const managerRef = doc(db, "managers", id);
+    const review = {
+      comment: newReview,
+      date: new Date().toISOString(),
+    };
+
+    await updateDoc(managerRef, {
+      reviews: arrayUnion(review),
+    });
+
+    setManager((prev) => ({
+      ...prev,
+      reviews: [...prev.reviews, review],
+    }));
+    setNewReview("");
+  };
 
   // If id is not available yet, show a loading message
   if (!manager) {
@@ -52,24 +83,26 @@ export default function ManagerProfile() {
         <h2>Average Rating</h2>
           <span className="AverageRatingValue">{averageRating}</span>
           <span className="average-rating-text ml-2 text-lg">/ 5</span>
-          {manager.reviews.length > 0 ? (
-  <ul className="mt-4 space-y-4">
-    {manager.reviews.map((review) => (
-      <li key={review.id} className="border p-4 rounded-lg shadow-md">
-        <div className="flex justify-between items-center">
-          <span className="font-bold">Anonymous</span>
-          <span>{review.rating} / 5</span>
-        </div>
-        <p className="text-gray-500 text-sm">{review.date}</p>
-        <p className="mt-2">{review.comment}</p>
-      </li>
-    ))}
-  </ul>
-) : (
-  <p>No reviews available.</p>
-)}
+          <h3 className="mt-6 text-xl">Reviews:</h3>
+      {manager.reviews.length > 0 ? (
+        manager.reviews.map((review, index) => (
+          <div key={index} className="border p-2 my-2 rounded">
+            <p>{review.comment}</p>
+            <span className="text-sm text-gray-500">{new Date(review.date).toLocaleDateString()}</span>
+          </div>
+        ))
+      ) : (
+        <p>No reviews yet.</p>
+      )}
       </div>
-
+      <div className="mt-4">
+        <input
+          type="text"
+          placeholder="Write a review..."
+          value={newReview}
+          onChange={(e) => setNewReview(e.target.value)}
+          className="border p-2 rounded w-full"
+        />
       <div className="write-review">
       <button
         onClick={handleWriteReviewClick}
@@ -77,6 +110,7 @@ export default function ManagerProfile() {
       >
         Write a Review
       </button>
+      </div>
       </div>
       </div>
   );

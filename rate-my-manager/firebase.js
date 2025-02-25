@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getAuth, GoogleAuthProvider} from "firebase/auth";
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyDFzFFsmdqwLUoEaPSTcTp77Dd7TGdOO1U",
@@ -13,10 +12,9 @@ const firebaseConfig = {
   measurementId: "G-QD7WX8106P"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-export const auth = getAuth(app);
-export const database = getFirestore(app);
-export const googleProvider = new GoogleAuthProvider(app).addScope('email');
-export default app;
+export { auth, provider, signInWithPopup, db };
