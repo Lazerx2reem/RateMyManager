@@ -30,7 +30,7 @@ const Login = () => {
       const result = await signInWithPopup(auth, provider);
       console.log("User:", result.user);
       // Redirect to home page after successful login
-      router.push("/home");
+      router.push("/profile");
     } catch (error) {
       console.error("Google Sign-In Error:", error);
     } finally {

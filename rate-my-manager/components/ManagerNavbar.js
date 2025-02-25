@@ -4,7 +4,11 @@ export default function ManagerNavbar() {
   return (
     <nav className="navbar">
       <ul>
-        <li><Link href="/">Home</Link></li>
+      <li className="logo">
+          <Link href="/">
+            <Image src="/MiniLogo.png" width={150} height={100} alt="Logo" />
+          </Link>
+        </li>
         <li><Link href="/profile">My Profile</Link></li>
       </ul>
     </nav>
