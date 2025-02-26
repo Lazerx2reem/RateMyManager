@@ -1,6 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import firebase from 'firebase/app';
+import 'firebase/database';
+import { getDatabase, ref, set } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDFzFFsmdqwLUoEaPSTcTp77Dd7TGdOO1U",
@@ -18,3 +21,5 @@ const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
 export { auth, provider, signInWithPopup, db };
+// Export Firebase Realtime Database
+export const database = getDatabase(app);

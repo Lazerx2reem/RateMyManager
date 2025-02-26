@@ -3,6 +3,7 @@ import { auth, db, provider } from "../../firebase";
 import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { setDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/router";
+import HomeNavbar from "../../components/HomeNavbar";
 
 const SignUp = () => {
   const [name, setName] = useState("");
@@ -56,6 +57,8 @@ const SignUp = () => {
   };
 
   return (
+    <div>
+      <HomeNavbar />
     <div className="flex justify-center items-center h-screen bg-purple-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
         <h2 className="text-3xl font-bold text-center text-purple-700 mb-6">Sign Up</h2>
@@ -109,6 +112,7 @@ const SignUp = () => {
           Already have an account? <a href="/auth/login" className="text-purple-600 hover:underline">Login here</a>
         </p>
       </div>
+    </div>
     </div>
   );
 };

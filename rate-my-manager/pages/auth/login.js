@@ -3,6 +3,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "/firebase"; // Adjust path based on your project structure
 import { useRouter } from "next/router";
+import HomeNavbar from "../../components/HomeNavbar";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -39,6 +40,8 @@ const Login = () => {
   };
 
   return (
+    <div>
+      <HomeNavbar />
     <div className="flex justify-center items-center h-screen bg-purple-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
         <h1 className="text-3xl font-bold text-center text-purple-700 mb-6">Login</h1>
@@ -85,6 +88,7 @@ const Login = () => {
           Don't have an account? <a href="/auth/signup" className="text-purple-600 hover:underline">Sign up here</a>
         </p>
       </div>
+    </div>
     </div>
   );
 };

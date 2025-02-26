@@ -1,132 +1,136 @@
 import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
 import HomeNavbar from "../components/HomeNavbar";
-import { useState } from "react";
-import axios from "axios";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { useState, useEffect } from "react";
+import { ref, onValue, set, update } from "firebase/database";
+import { database } from "../firebase";
+import { useRouter } from "next/router";
+import { v4 as uuidv4 } from "uuid";
 
 export default function Home() {
-  const [company, setCompany] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [showManagerInput, setShowManagerInput] = useState(false);
-  const [companies, setCompanies] = useState([]);
-  const [manager, setManager] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [companiesList, setCompaniesList] = useState([]);
+  const router = useRouter();
 
-  // Function to handle search query for companies using Yelp API
-  const handleCompanySearch = async (query) => {
-    if (query.trim() === "") {
-      setCompanies([]);
+  // Fetch existing companies from Firebase
+  useEffect(() => {
+    const companiesRef = ref(database, "info"); // Fetching companies under "info"
+    onValue(companiesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const companies = Object.keys(snapshot.val()); // Extract company names
+        setCompaniesList(companies);
+      }
+    });
+  }, []);
+
+  // Handle company input change
+  const handleCompanyNameChange = (e) => {
+    setCompanyName(e.target.value);
+    setShowManagerInput(false);
+  };
+
+  // Handle company form submission
+  const handleCompanySubmit = (e) => {
+    e.preventDefault();
+
+    const normalizedCompanyName = companyName.trim();
+    if (!normalizedCompanyName) {
+      alert("Please enter a company name.");
       return;
     }
 
-    // Use the Yelp API for search (replace with your actual API key)
-    const API_KEY = "YOUR_YELP_API_KEY";  // Replace with your Yelp API Key
-    const endpoint = `https://api.yelp.com/v3/businesses/search?term=business&location=${query}`;
+    // Check if company exists (case-insensitive)
+    const companyExists = companiesList.some(
+      (company) => company.trim().toLowerCase() === normalizedCompanyName.toLowerCase()
+    );
 
-    try {
-      const response = await axios.get(endpoint, {
-        headers: {
-          Authorization: `Bearer ${API_KEY}`,
-        },
-      });
-
-      // If results are found, process them
-      if (response.data.businesses && response.data.businesses.length > 0) {
-        const businessNames = response.data.businesses.map((business) => business.name);
-        setCompanies(businessNames);
-      } else {
-        setCompanies([]);
-      }
-    } catch (error) {
-      console.error("Error fetching data from Yelp API:", error);
-    }
-  };
-
-  const handleCompanySubmit = (e) => {
-    e.preventDefault();
-    if (company.trim() !== "") {
+    if (companyExists) {
+      setShowManagerInput(true);
+    } else {
+      // Create the company record without manager
+      const companyRef = ref(database, `info/${normalizedCompanyName}`);
+      set(companyRef, { managers: {} });
       setShowManagerInput(true);
     }
   };
 
-  const handleManagerSubmit = (e) => {
+  // Handle manager form submission
+  const handleManagerSubmit = async (e) => {
     e.preventDefault();
-    alert(`Company: ${company}\nManager: ${manager}`);
-  };
 
-  // Handle selecting a company from the dropdown
-  const handleCompanySelect = (companyName) => {
-    setCompany(companyName);
-    setCompanies([]);  // Clear dropdown after selection
-    setShowManagerInput(true);  // Show manager input form
+    const firstNameTrimmed = firstName.trim();
+    const lastNameTrimmed = lastName.trim();
+    if (!firstNameTrimmed || !lastNameTrimmed || !companyName.trim()) {
+      alert("Please enter both first and last name.");
+      return;
+    }
+
+    const fullName = `${firstNameTrimmed} ${lastNameTrimmed}`;
+    const managersRef = ref(database, `info/${companyName}/managers`);
+
+    // Check if manager already exists under the company
+    onValue(managersRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const managers = snapshot.val();
+        for (const managerId in managers) {
+          if (managers[managerId].name === fullName) {
+            // Redirect to existing manager's page
+            router.push(`../Managers/${managerId}`);
+            return;
+          }
+        }
+      }
+
+      // If manager does not exist, create new entry
+      const managerId = uuidv4();
+      const newManagerRef = ref(database, `info/${companyName}/managers/${managerId}`);
+      set(newManagerRef, { name: fullName }).then(() => {
+        router.push(`../Managers/${managerId}`);
+      });
+    }, { onlyOnce: true }); // Ensures we only read data once
   };
 
   return (
     <div>
       <HomeNavbar />
       <Image src="/logo.png" width={300} height={200} />
-      
+
       {!showManagerInput ? (
-        <form onSubmit={handleCompanySubmit} className="flex flex-col items-center space-y-4 relative">
+        <form onSubmit={handleCompanySubmit} className="flex flex-col items-center space-y-4">
           <input
             type="text"
-            placeholder="Enter Company Name"
-            value={company}
-            onChange={(e) => {
-              setCompany(e.target.value);
-              handleCompanySearch(e.target.value); // Trigger search as user types
-            }}
+            value={companyName}
+            onChange={handleCompanyNameChange}
+            placeholder="Enter company name"
             className="w-80 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
             required
           />
-          
-          {/* Dropdown for Company Results */}
-          {companies.length > 0 && (
-            <div className="absolute bg-white border border-gray-300 mt-2 w-80 rounded-lg shadow-lg z-10">
-              <ul>
-                {companies.map((companyName, index) => (
-                  <li
-                    key={index}
-                    className="p-2 cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleCompanySelect(companyName)}
-                  >
-                    {companyName}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600"
-          >
+          <button type="submit" className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600">
             Next
           </button>
         </form>
       ) : (
         <form onSubmit={handleManagerSubmit} className="flex flex-col items-center space-y-4">
-          <h2 className="text-xl font-semibold">Company: {company}</h2>
+          <h2 className="text-xl font-semibold">Company: {companyName}</h2>
           <input
             type="text"
-            placeholder="Enter Manager's Name"
-            value={manager}
-            onChange={(e) => setManager(e.target.value)}
+            placeholder="First Name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
             className="w-80 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
             required
           />
-          <button
-            type="submit"
-            className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600"
-          >
+          <input
+            type="text"
+            placeholder="Last Name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            className="w-80 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            required
+          />
+          <button type="submit" className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600">
             Submit
           </button>
         </form>
