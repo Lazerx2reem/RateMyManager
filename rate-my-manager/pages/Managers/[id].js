@@ -5,6 +5,7 @@ import { database } from "../../firebase";
 import ManagerReview from "../../components/ManagerReview";
 import ManagerNavbar from "../../components/ManagerNavbar";
 
+
 export default function ManagerProfile() {
   const router = useRouter();
   const { id } = router.query;
@@ -14,8 +15,8 @@ export default function ManagerProfile() {
   const [newReview, setNewReview] = useState("");
   const [newRating, setNewRating] = useState(3);
   const [department, setDepartment] = useState("");
-  const [overtime, setOvertime] = useState("No");
-  const [micromanages, setMicromanages] = useState("No");
+  const [overtime, setOvertime] = useState("");
+  const [micromanages, setMicromanages] = useState("");
 
   useEffect(() => {
     if (!id) return;
