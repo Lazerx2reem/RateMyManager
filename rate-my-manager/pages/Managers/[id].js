@@ -18,6 +18,7 @@ export default function ManagerProfile() {
   const [department, setDepartment] = useState("");
   const [overtime, setOvertime] = useState("");
   const [micromanages, setMicromanages] = useState("No");
+  const [summary, setSummary] = useState("Loading summary...");
 
   useEffect(() => {
     if (!id) return;
@@ -56,6 +57,8 @@ export default function ManagerProfile() {
             setManager(foundManager);
             setReviews(allReviews);
             setRating(reviewCount > 0 ? totalRating / reviewCount : 0);
+
+            fetchReviewSummary(allReviews);
           } else {
             setManager({ name: "Manager Not Found", company: "" });
           }
@@ -91,7 +94,8 @@ export default function ManagerProfile() {
       const snapshot = await get(managerRef);
       if (snapshot.exists()) {
         const managerData = snapshot.val();
-        const updatedReviews = managerData.reviews ? [...managerData.reviews, review] : [review];
+        const existingReviews = Array.isArray(managerData.reviews) ? managerData.reviews : [];
+        const updatedReviews = [...existingReviews, review];
 
         await update(managerRef, { reviews: updatedReviews });
 
@@ -101,11 +105,45 @@ export default function ManagerProfile() {
         setDepartment("");
         setOvertime("");
         setMicromanages("");
+
+        fetchReviewSummary(updatedReviews);
       }
     } catch (error) {
       console.error("Error adding review:", error);
     }
   };
+
+  const fetchReviewSummary = async (reviews) => {
+    if (reviews.length === 0) {
+      console.log("No reviews available, skipping OpenAI request.");
+      setSummary("No reviews available.");
+      return;
+    }
+  
+    console.log("Fetching review summary from OpenAI...", reviews);
+  
+    try {
+      const response = await fetch("/api/reviewSummary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews }),
+      });
+  
+      console.log("API Response:", response);
+  
+      const data = await response.json();
+      console.log("Summary Response Data:", data);
+  
+      setSummary(data.summary || "No summary available.");
+    } catch (error) {
+      console.error("Error fetching review summary:", error);
+      setSummary("Error loading summary.");
+    }
+  };
+  
+  
+
+
 
   if (!manager) return <div>Loading...</div>;
 
@@ -175,6 +213,8 @@ export default function ManagerProfile() {
         >
           Submit Review
         </button>
+        <p className="text-md font-semibold text-gray-700 mt-4">Review Summary:</p>
+          <p className="text-gray-600 italic">{summary}</p>
       </div>
 
       <div className="w-96 mt-6">
