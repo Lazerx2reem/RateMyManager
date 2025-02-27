@@ -95,7 +95,9 @@ export default function Home() {
   return (
     <div>
       <HomeNavbar />
-      <Image src="/logo.png" width={300} height={200} />
+      <div className="flex justify-center">
+        <Image src="/logo.png" width={300} height={200} />
+      </div>
 
       {!showManagerInput ? (
         <form onSubmit={handleCompanySubmit} className="flex flex-col items-center space-y-4">
