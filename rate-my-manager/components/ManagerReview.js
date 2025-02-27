@@ -22,8 +22,7 @@ const ManagerReview = ({ review }) => {
         <div className="ml-4">
           <p className="text-md font-semibold">{review.department || "N/A"}</p>
           <p className="text-gray-600">Overtime: <span className="font-semibold">{review.overtime ? "Yes" : "No"}</span></p>
-          <p className="text-gray-600">Micromanages: <span className="font-semibold">{review.micromanages ? "Yes" : "No"}</span></p>
-          <p className="text-gray-600">Work-Life Balance: <span className="font-semibold">{review.workLifeBalance}</span></p>
+          <p className="text-gray-600">Micromanages: <span className="font-semibold">{review.micromanages === "Yes" ? "Yes" : "No"}</span></p>
         </div>
       </div>
       

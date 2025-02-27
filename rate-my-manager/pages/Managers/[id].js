@@ -6,6 +6,7 @@ import ManagerReview from "../../components/ManagerReview";
 import ManagerNavbar from "../../components/ManagerNavbar";
 
 
+
 export default function ManagerProfile() {
   const router = useRouter();
   const { id } = router.query;
@@ -16,7 +17,7 @@ export default function ManagerProfile() {
   const [newRating, setNewRating] = useState(3);
   const [department, setDepartment] = useState("");
   const [overtime, setOvertime] = useState("");
-  const [micromanages, setMicromanages] = useState("");
+  const [micromanages, setMicromanages] = useState("No");
 
   useEffect(() => {
     if (!id) return;
@@ -77,7 +78,7 @@ export default function ManagerProfile() {
 
     const review = {
       comment: newReview,
-      rating: newRating,
+      rating: newRating ?? 3,
       department,
       overtime,
       micromanages,
@@ -96,7 +97,7 @@ export default function ManagerProfile() {
 
         setReviews(updatedReviews);
         setNewReview("");
-        setNewRating();
+        setNewRating(3);
         setDepartment("");
         setOvertime("");
         setMicromanages("");
@@ -141,8 +142,8 @@ export default function ManagerProfile() {
             type="number"
             min="1"
             max="5"
-            value={newRating}
-            onChange={(e) => setNewRating(parseInt(e.target.value))}
+            value={newRating || 3}
+            onChange={(e) => setNewRating(Number(e.target.value) || 3)}
             className="w-16 p-2 border rounded-lg"
           />
         </div>

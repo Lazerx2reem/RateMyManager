@@ -96,7 +96,7 @@ export default function Home() {
     <div>
       <HomeNavbar />
       <div className="flex justify-center">
-        <Image src="/logo.png" width={300} height={200} />
+      <Image src="/logo.png" width={300} height={200} />
       </div>
 
       {!showManagerInput ? (
