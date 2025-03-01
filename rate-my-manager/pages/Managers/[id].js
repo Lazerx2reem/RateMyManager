@@ -5,7 +5,8 @@ import { database } from "../../firebase";
 import ManagerReview from "../../components/ManagerReview";
 import ManagerNavbar from "../../components/ManagerNavbar";
 
-
+/* ADDED */
+import ManagerRatingChart from '../../components/ManagerRatingChart';
 
 export default function ManagerProfile() {
   const router = useRouter();
@@ -14,11 +15,14 @@ export default function ManagerProfile() {
   const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(0);
   const [newReview, setNewReview] = useState("");
-  const [newRating, setNewRating] = useState(3);
+  const [newRating, setNewRating] = useState();
   const [department, setDepartment] = useState("");
   const [overtime, setOvertime] = useState("");
-  const [micromanages, setMicromanages] = useState("No");
+  const [micromanages, setMicromanages] = useState("");
+  const [worklife, setWorkLife] = useState("");
   const [summary, setSummary] = useState("Loading summary...");
+
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -73,6 +77,14 @@ export default function ManagerProfile() {
     fetchManager();
   }, [id]);
 
+  const getRatingColor = (rating) => {
+    if (rating == 5) return "bg-green-300"; 
+    if (rating == 4) return "bg-green-200";
+    if (rating == 3) return "bg-yellow-200"; 
+    if (rating == 2) return "bg-red-200"; 
+    return "bg-red-300"; 
+  };
+
   const handleAddReview = async () => {
     if (!newReview.trim()) {
       alert("Please enter a review before submitting.");
@@ -85,7 +97,8 @@ export default function ManagerProfile() {
       department,
       overtime,
       micromanages,
-      date: new Date().toISOString(),
+      worklife,
+      date: new Date().toLocaleDateString('en-GB'),
     };
 
     const managerRef = ref(database, `info/${manager.company}/managers/${id}`);
@@ -101,11 +114,11 @@ export default function ManagerProfile() {
 
         setReviews(updatedReviews);
         setNewReview("");
-        setNewRating(3);
+        setNewRating();
         setDepartment("");
         setOvertime("");
         setMicromanages("");
-
+        setWorkLife("");
         fetchReviewSummary(updatedReviews);
       }
     } catch (error) {
@@ -115,117 +128,218 @@ export default function ManagerProfile() {
 
   const fetchReviewSummary = async (reviews) => {
     if (reviews.length === 0) {
-      console.log("No reviews available, skipping OpenAI request.");
       setSummary("No reviews available.");
       return;
     }
-  
-    console.log("Fetching review summary from OpenAI...", reviews);
-  
+
     try {
       const response = await fetch("/api/reviewSummary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reviews }),
       });
-  
-      console.log("API Response:", response);
-  
+
       const data = await response.json();
-      console.log("Summary Response Data:", data);
-  
       setSummary(data.summary || "No summary available.");
     } catch (error) {
       console.error("Error fetching review summary:", error);
       setSummary("Error loading summary.");
     }
   };
-  
-  
 
+  const handleCircleClick = (field, value) => {
+    if (field === "overtime") {
+      setOvertime(value);
+    } else if (field === "micromanages") {
+      setMicromanages(value);
+    } else if (field === "worklife") {
+      setWorkLife(value);
+    }
+  };
 
+  const getCircleClass = (selected, value) => {
+    return selected === value
+      ? "w-16 h-16 border-2 rounded-full flex items-center justify-center cursor-pointer bg-blue-200 text-white"
+      : "w-16 h-16 border-2 rounded-full flex items-center justify-center cursor-pointer bg-white border-gray-400 text-gray-600";
+  };
+
+  const renderCircleContent = (selected, value, type) => {
+    let circleContent = null;
+  
+    if (type === "overtime" || type === "micromanages") {
+      // Display tick or cross if selected, otherwise show the option text
+      circleContent = selected === value
+        ? value === "Yes"
+          ? <span className="text-green-500">✔️</span>
+          : <span className="text-red-500">❌</span>
+        : value === "Yes"
+        ? <span className="text-green-500">Yes</span>
+        : <span className="text-red-500">No</span>;
+    } else if (type === "worklife") {
+      // Show the appropriate text inside the circle for work-life balance
+      circleContent = selected === value
+        ? value === "Good"
+          ? <span className="text-green-500">Good</span>
+          : value === "Fair"
+          ? <span className="text-yellow-500">Fair</span>
+          : value === "Bad"
+          ? <span className="text-red-500">Bad</span>
+          : null
+        : value === "Good"
+        ? <span className="text-green-500">Good</span>
+        : value === "Fair"
+        ? <span className="text-yellow-500">Fair</span>
+        : value === "Bad"
+        ? <span className="text-red-500">Bad</span>
+        : null;
+    }
+  
+    return circleContent;
+  };
+  
 
   if (!manager) return <div>Loading...</div>;
 
+
+  
+
   return (
-    <div>
+    <div className="min-h-screen bg-gray-100 ">
       <ManagerNavbar />
-    <div className="min-h-screen flex flex-col items-center bg-gray-100 p-6">
-      <div className="bg-white shadow-lg rounded-lg p-6 w-96 text-center">
-        <h1 className="text-3xl font-bold text-gray-800">{manager.name}</h1>
-        <h3 className="text-lg text-gray-500 mt-2">Company: {manager.company}</h3>
-        <h4 className="text-lg text-gray-600 mt-1">
-          Average Rating: {rating ? rating.toFixed(2) : "No ratings yet"} / 5
-        </h4>
-      </div>
+      
+      <div className="container mx-auto flex flex-col lg:flex-row gap-10">
+  {/* Manager Profile Section */}
+<div className=" mx-auto pt-20 ">
+  <h1 className="text-3xl font-bold text-gray-800 text-center">{manager.name}</h1>
+  <h3 className="text-lg text-gray-500 mt-2 text-center">Company: {manager.company}</h3>
+  <h4 className="text-lg text-gray-600 mt-1 text-center">
+    Average Rating: {rating ? rating.toFixed(2) : "No ratings yet"} / 5
+  </h4>
 
-      <div className="bg-white shadow-lg rounded-lg p-4 w-96 mt-6">
-        <h2 className="text-xl font-semibold">Add a Review</h2>
-        <input
-          type="text"
-          placeholder="Department"
-          value={department}
-          onChange={(e) => setDepartment(e.target.value)}
-          className="w-full p-3 mt-2 border rounded-lg"
-        />
-        <textarea
-          className="w-full p-3 mt-2 border rounded-lg"
-          placeholder="Write your review here..."
-          value={newReview}
-          onChange={(e) => setNewReview(e.target.value)}
-        />
-        <div className="flex justify-between mt-2">
-          <label className="font-semibold">Rating (1-5):</label>
-          <input
-            type="number"
-            min="1"
-            max="5"
-            value={newRating || 3}
-            onChange={(e) => setNewRating(Number(e.target.value) || 3)}
-            className="w-16 p-2 border rounded-lg"
-          />
-        </div>
-        <div className="flex justify-between mt-2">
-          <label className="font-semibold">Overtime Required:</label>
-          <select
-            className="p-2 border rounded-lg"
-            value={overtime}
-            onChange={(e) => setOvertime(e.target.value)}
-          >
-            <option>No</option>
-            <option>Yes</option>
-          </select>
-        </div>
-        <div className="flex justify-between mt-2">
-          <label className="font-semibold">Micromanages:</label>
-          <select
-            className="p-2 border rounded-lg"
-            value={micromanages}
-            onChange={(e) => setMicromanages(e.target.value)}
-          >
-            <option>No</option>
-            <option>Yes</option>
-          </select>
-        </div>
-        <button
-          onClick={handleAddReview}
-          className="mt-3 bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition duration-300 w-full"
-        >
-          Submit Review
-        </button>
-        <p className="text-md font-semibold text-gray-700 mt-4">Review Summary:</p>
-          <p className="text-gray-600 italic">{summary}</p>
-      </div>
+  
+</div>
 
-      <div className="w-96 mt-6">
-        <h2 className="text-xl font-semibold">Reviews</h2>
-        {reviews.length > 0 ? (
-          reviews.map((review, index) => <ManagerReview key={index} review={review} />)
-        ) : (
-          <p className="text-gray-600 mt-2">Be the first to review!</p>
-        )}
+
+  {/* Reviews Section */}
+<div className="bg-white shadow-lg rounded-lg p-6 flex-1 mb-6 max-w-xl mx-auto mt-12"> {/* Added mt-12 to push it down */}
+  <h2 className="text-2xl font-semibold mb-4">Add a Review</h2>
+    
+    {/* Department Input */}
+    <div className="mb-4">
+      <input
+        type="text"
+        placeholder="Department"
+        value={department}
+        onChange={(e) => setDepartment(e.target.value)}
+        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+      />
+    </div>
+
+    {/* Review Input */}
+    <div className="mb-4">
+      <textarea
+        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+        placeholder="Write your review here..."
+        value={newReview}
+        onChange={(e) => setNewReview(e.target.value)}
+      />
+    </div>
+
+    {/* Rating Section */}
+    <div className="mb-4">
+      <h3 className="font-semibold text-left">Rating</h3>
+      <div className="flex justify-between mt-2">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div
+            key={i}
+            onMouseEnter={() => setNewRating(i)}
+            onClick={() => setNewRating(i)}
+            className={`flex-1 h-12 cursor-pointer rounded-md transition-all duration-200 ease-in-out ${getRatingColor(i)} hover:scale-110 relative ${newRating === i ? "border-2 border-blue-500" : ""}`}
+          >
+            <div className={`w-full h-8 rounded-md ${getRatingColor(i)} ${newRating === i ? "border-blue-500" : ""}`}></div>
+            <div className="absolute bottom-0 w-full text-center text-sm font-semibold">{i}</div>
+          </div>
+        ))}
       </div>
     </div>
+
+    {/* Overtime Section */}
+    <div className="mb-6">
+      <h3 className="font-semibold text-left">Overtime</h3>
+      <div className="flex justify-between mt-2">
+        <div
+          onClick={() => handleCircleClick("overtime", "Yes")}
+          className={getCircleClass(overtime, "Yes")}
+        >
+          {renderCircleContent(overtime, "Yes", "overtime")}
+        </div>
+        <div
+          onClick={() => handleCircleClick("overtime", "No")}
+          className={getCircleClass(overtime, "No")}
+        >
+          {renderCircleContent(overtime, "No", "overtime")}
+        </div>
+      </div>
+    </div>
+
+    {/* Micromanagement Section */}
+    <div className="mb-6">
+      <h3 className="font-semibold text-left">Micromanages</h3>
+      <div className="flex justify-between mt-2">
+        <div
+          onClick={() => handleCircleClick("micromanages", "Yes")}
+          className={getCircleClass(micromanages, "Yes")}
+        >
+          {renderCircleContent(micromanages, "Yes", "micromanages")}
+        </div>
+        <div
+          onClick={() => handleCircleClick("micromanages", "No")}
+          className={getCircleClass(micromanages, "No")}
+        >
+          {renderCircleContent(micromanages, "No", "micromanages")}
+        </div>
+      </div>
+    </div>
+
+    {/* Work-Life Balance Section */}
+    <div className="mb-6">
+      <h3 className="font-semibold text-left">Work Life Balance</h3>
+      <div className="flex justify-between mt-2">
+        {["Good", "Fair", "Bad"].map((value) => (
+          <div
+            key={value}
+            onClick={() => handleCircleClick("worklife", value)}
+            className={getCircleClass(worklife, value)}
+          >
+            {renderCircleContent(worklife, value, "worklife")}
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Submit Review Button */}
+    <button
+      onClick={handleAddReview}
+      className="mt-4 w-full bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+    >
+      Submit Review
+    </button>
+
+    <p className="text-md font-semibold text-gray-700 mt-4">Review Summary:</p>
+    <p className="text-gray-600 italic">{summary}</p>
   </div>
+</div>
+
+{/* Reviews List */}
+<div className="bg-white shadow-lg rounded-lg p-6  max-w-8xl flex-1 justify-center">
+  <h2 className="text-2xl font-semibold ">Reviews</h2>
+  {reviews.length > 0 ? (
+    reviews.map((review, index) => <ManagerReview key={index} review={review} />)
+  ) : (
+    <p className="text-gray-600 mt-2">Be the first to review!</p>
+  )}
+</div>
+    </div>
   );
+
 }

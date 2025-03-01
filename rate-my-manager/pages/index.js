@@ -1,10 +1,11 @@
 import Image from "next/image";
 import HomeNavbar from "../components/HomeNavbar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, UseRef } from "react";
 import { ref, onValue, set, update } from "firebase/database";
 import { database } from "../firebase";
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
+
 
 export default function Home() {
   const [companyName, setCompanyName] = useState("");
@@ -14,6 +15,7 @@ export default function Home() {
   const [companiesList, setCompaniesList] = useState([]);
   const router = useRouter();
 
+
   // Fetch existing companies from Firebase
   useEffect(() => {
     const companiesRef = ref(database, "info"); // Fetching companies under "info"
@@ -22,8 +24,11 @@ export default function Home() {
         const companies = Object.keys(snapshot.val()); // Extract company names
         setCompaniesList(companies);
       }
-    });
+    }); 
+    
+    
   }, []);
+
 
   // Handle company input change
   const handleCompanyNameChange = (e) => {
@@ -90,6 +95,10 @@ export default function Home() {
         router.push(`../Managers/${managerId}`);
       });
     }, { onlyOnce: true }); // Ensures we only read data once
+
+
+
+    
   };
 
   return (
@@ -137,6 +146,7 @@ export default function Home() {
           </button>
         </form>
       )}
+        
     </div>
   );
 }
