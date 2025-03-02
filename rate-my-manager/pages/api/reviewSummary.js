@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const openai = new OpenAI({ apiKey: "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" }); // ✅ New OpenAI API call
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY }); // ✅ New OpenAI API call
 
     const reviewText = reviews.map((r) => `- ${r.comment} (Rating: ${r.rating}/5)`).join("\n");
 

@@ -4,9 +4,7 @@ import { ref, get, update } from "firebase/database";
 import { database } from "../../firebase";
 import ManagerReview from "../../components/ManagerReview";
 import ManagerNavbar from "../../components/ManagerNavbar";
-
-/* ADDED */
-import ManagerRatingChart from '../../components/ManagerRatingChart';
+import Link from "next/link";
 
 export default function ManagerProfile() {
   const router = useRouter();
@@ -23,6 +21,8 @@ export default function ManagerProfile() {
   const [summary, setSummary] = useState("Loading summary...");
 
   const [showReviewForm, setShowReviewForm] = useState(false);
+
+  const isSubscribed = typeof window !== "undefined" && localStorage.getItem(`subscribed_${id}`) === "true";
 
   useEffect(() => {
     if (!id) return;
@@ -197,6 +197,7 @@ export default function ManagerProfile() {
     return circleContent;
   };
   
+  
 
   if (!manager) return <div>Loading...</div>;
 
@@ -215,6 +216,11 @@ export default function ManagerProfile() {
   <h4 className="text-lg text-gray-600 mt-1 text-center">
     Average Rating: {rating ? rating.toFixed(2) : "No ratings yet"} / 5
   </h4>
+  <p className="mt-4 text-blue-500 cursor-pointer hover:underline">
+  <Link href={isSubscribed ? `/data-analysis?id=${id}` : `/manager-subscription?id=${id}&name=${manager.name}`}>
+    Are you the Manager?
+  </Link>
+</p>
 
   
 </div>
