@@ -1,25 +1,39 @@
+// ManagerSubscription.js
 import { useRouter } from "next/router";
+import { loadStripe } from "@stripe/stripe-js";
+import { useState, useEffect } from "react";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 export default function ManagerSubscription() {
   const router = useRouter();
   const { id } = router.query;
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const subscriptionStatus = localStorage.getItem(`subscribed_${id}`);
+      setIsSubscribed(subscriptionStatus === "true");
+    }
+  }, [id]);
 
   const handleSubscribe = async () => {
-    try {
-      const response = await fetch("/api/checkout", {
+    if (!isSubscribed) {
+      const stripe = await stripePromise;
+      const response = await fetch(`/api/create-checkout-session`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
+        headers: { "Content-Type": "application/json" },
       });
 
-      const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url; // Redirect to Stripe Checkout
-      } else {
-        alert("Failed to create checkout session.");
+      const session = await response.json();
+
+      // Redirect to Stripe Checkout
+      const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
+
+      if (error) {
+        console.error("Error during checkout", error);
       }
-    } catch (error) {
-      console.error("Error processing subscription:", error);
     }
   };
 
@@ -32,9 +46,10 @@ export default function ManagerSubscription() {
         </p>
         <button
           onClick={handleSubscribe}
-          className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+          disabled={isSubscribed}  // Disable the button if already subscribed
+          className={`${isSubscribed ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500"} text-white rounded-lg hover:bg-blue-600 transition duration-300`}
         >
-          Subscribe for $1.99/month
+          {isSubscribed ? "Already Subscribed" : "Subscribe Now"}
         </button>
       </div>
     </div>

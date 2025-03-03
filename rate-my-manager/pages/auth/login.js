@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "/firebase"; // Adjust path based on your project structure
+import { auth,db, provider } from "/firebase"; // Adjust path based on your project structure
 import { useRouter } from "next/router";
 import HomeNavbar from "../../components/HomeNavbar";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -24,18 +25,29 @@ const Login = () => {
     }
   };
 
-  // Handle Google Sign-In
   const handleGoogleSignIn = async () => {
-    setLoading(true); // Prevent multiple clicks
     try {
       const result = await signInWithPopup(auth, provider);
-      console.log("User:", result.user);
-      // Redirect to home page after successful login
-      router.push("/profile");
-    } catch (error) {
-      console.error("Google Sign-In Error:", error);
-    } finally {
-      setLoading(false);
+      const user = result.user;
+
+      // Check Firestore for existing user data
+      const userRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        router.push("/profile");
+      } else {
+        // If the user doesn't exist, create a new record
+        await setDoc(userRef, {
+          name: user.displayName,
+          email: user.email,
+          isSubscribed: false,
+          user_id: null
+        });
+        router.push("/profile");
+      }
+    } catch (err) {
+      console.error("Google Sign-In Error:", err);
     }
   };
 

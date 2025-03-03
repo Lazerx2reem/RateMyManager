@@ -1,10 +1,13 @@
+// ManagerProfile.js
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { ref, get, update } from "firebase/database";
-import { database } from "../../firebase";
+import { database, auth, db} from "../../firebase";
 import ManagerReview from "../../components/ManagerReview";
 import ManagerNavbar from "../../components/ManagerNavbar";
 import Link from "next/link";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc,getDoc } from "firebase/firestore";
 
 export default function ManagerProfile() {
   const router = useRouter();
@@ -19,10 +22,43 @@ export default function ManagerProfile() {
   const [micromanages, setMicromanages] = useState("");
   const [worklife, setWorkLife] = useState("");
   const [summary, setSummary] = useState("Loading summary...");
-
-  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [uid, setUserId] = useState(null);
 
   const isSubscribed = typeof window !== "undefined" && localStorage.getItem(`subscribed_${id}`) === "true";
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const fetchedUserId = await getUserId(user.uid); // Fetch Firestore user_id
+        setUserId(fetchedUserId);
+      } else {
+        setUserId(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const getUserId = async (uid) => {
+    try {
+      if (!uid) return null; // Ensure UID is available
+  
+      const userRef = doc(db, "users", uid); // Firestore users collection
+      const userSnap = await getDoc(userRef);
+  
+      if (userSnap.exists()) {
+        return userSnap.data().user_id; // Get user_id from Firestore
+      } else {
+        console.log("No such document!");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching user ID:", error);
+      return null;
+    }
+  };
+  
+  
+  
 
   useEffect(() => {
     if (!id) return;
@@ -61,7 +97,6 @@ export default function ManagerProfile() {
             setManager(foundManager);
             setReviews(allReviews);
             setRating(reviewCount > 0 ? totalRating / reviewCount : 0);
-
             fetchReviewSummary(allReviews);
           } else {
             setManager({ name: "Manager Not Found", company: "" });
@@ -77,6 +112,8 @@ export default function ManagerProfile() {
     fetchManager();
   }, [id]);
 
+
+
   const getRatingColor = (rating) => {
     if (rating == 5) return "bg-green-300"; 
     if (rating == 4) return "bg-green-200";
@@ -85,12 +122,13 @@ export default function ManagerProfile() {
     return "bg-red-300"; 
   };
 
+  
   const handleAddReview = async () => {
     if (!newReview.trim()) {
       alert("Please enter a review before submitting.");
       return;
     }
-
+  
     const review = {
       comment: newReview,
       rating: newRating ?? 3,
@@ -100,19 +138,26 @@ export default function ManagerProfile() {
       worklife,
       date: new Date().toLocaleDateString('en-GB'),
     };
-
+  
     const managerRef = ref(database, `info/${manager.company}/managers/${id}`);
-
+  
     try {
       const snapshot = await get(managerRef);
       if (snapshot.exists()) {
         const managerData = snapshot.val();
         const existingReviews = Array.isArray(managerData.reviews) ? managerData.reviews : [];
         const updatedReviews = [...existingReviews, review];
-
+  
+        // Update reviews in the database
         await update(managerRef, { reviews: updatedReviews });
-
+  
+        // Update local state for reviews
         setReviews(updatedReviews);
+  
+        // Recalculate the average rating
+        calculateNewRating(updatedReviews);
+  
+        // Clear the form inputs
         setNewReview("");
         setNewRating();
         setDepartment("");
@@ -124,6 +169,19 @@ export default function ManagerProfile() {
     } catch (error) {
       console.error("Error adding review:", error);
     }
+  };
+
+  const calculateNewRating = (reviews) => {
+    let totalRating = 0;
+    let reviewCount = 0;
+  
+    reviews.forEach((review) => {
+      totalRating += review.rating || 0;
+      reviewCount++;
+    });
+  
+    const newRating = reviewCount > 0 ? totalRating / reviewCount : 0;
+    setRating(newRating); // Update the average rating in the state
   };
 
   const fetchReviewSummary = async (reviews) => {
@@ -196,37 +254,43 @@ export default function ManagerProfile() {
   
     return circleContent;
   };
-  
-  
+
 
   if (!manager) return <div>Loading...</div>;
-
-
-  
 
   return (
     <div className="min-h-screen bg-gray-100 ">
       <ManagerNavbar />
-      
       <div className="container mx-auto flex flex-col lg:flex-row gap-10">
-  {/* Manager Profile Section */}
-<div className=" mx-auto pt-20 ">
-  <h1 className="text-3xl font-bold text-gray-800 text-center">{manager.name}</h1>
-  <h3 className="text-lg text-gray-500 mt-2 text-center">Company: {manager.company}</h3>
-  <h4 className="text-lg text-gray-600 mt-1 text-center">
-    Average Rating: {rating ? rating.toFixed(2) : "No ratings yet"} / 5
-  </h4>
-  <p className="mt-4 text-blue-500 cursor-pointer hover:underline">
-  <Link href={isSubscribed ? `/data-analysis?id=${id}` : `/manager-subscription?id=${id}&name=${manager.name}`}>
-    Are you the Manager?
-  </Link>
-</p>
+        <div className="mx-auto pt-20">
+          <h1 className="text-3xl font-bold text-gray-800 text-center">{manager.name}</h1>
+          <h3 className="text-lg text-gray-500 mt-2 text-center">Company: {manager.company}</h3>
+          <h4 className="text-lg text-gray-600 mt-1 text-center">
+            Average Rating: {rating ? rating.toFixed(2) : "No ratings yet"} / 5
+          </h4>
+          {/* Conditional Rendering based on the logged-in user's ID */}
+          {uid == id ? (
+          // If logged-in user ID matches the manager ID, show the "Check Analysis" button
+          <button
+            className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+            onClick={() => router.push(`/data-analysis?id=${id}`)} 
+          >
+            Check Analysis
+          </button>
+        ) : (
+          // If the logged-in user is not the manager, show the "Are you the Manager?" link
+          <p className="mt-4 text-blue-500 cursor-pointer hover:underline">
+            <Link href={`/manager-subscription?id=${id}`}>
+              Are you the Manager?
+            </Link>
+          </p>
+        )}
+        </div>
+        
 
-  
-</div>
-
-
-  {/* Reviews Section */}
+       
+        
+        {/* Reviews Section */}
 <div className="bg-white shadow-lg rounded-lg p-6 flex-1 mb-6 max-w-xl mx-auto mt-12"> {/* Added mt-12 to push it down */}
   <h2 className="text-2xl font-semibold mb-4">Add a Review</h2>
     

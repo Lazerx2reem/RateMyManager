@@ -17,42 +17,39 @@ const SignUp = () => {
   const handleSignUp = async (e) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
-
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Store the user's data in Firestore
       await setDoc(doc(db, "users", user.uid), {
         name,
-        email
+        email,
+        isSubscribed: false, // initial subscription status is false
       });
 
-      router.push("/");
+      router.push("/profile"); // Redirect after successful sign-up
     } catch (err) {
       setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setLoading(true);
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      const userRef = doc(db, "users", user.uid);
-      await setDoc(userRef, {
+      // Store the user's data in Firestore (if not already)
+      await setDoc(doc(db, "users", user.uid), {
         name: user.displayName,
-        email: user.email
-      }, { merge: true });
+        email: user.email,
+        isSubscribed: false, // Set initial subscription status
+        user_id: ''
+      });
 
-      router.push("/");
-    } catch (error) {
-      console.error("Google Sign-In Error:", error);
-    } finally {
-      setLoading(false);
+      router.push("/profile");
+    } catch (err) {
+      console.error("Google Sign-In Error:", err);
     }
   };
 
