@@ -2,9 +2,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../../firebase";  // your Firestore setup
+import { db } from "../firebase";  // your Firestore setup
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "../../firebase";
+import { auth } from "../firebase";
 
 const SubscriptionSuccess = () => {
   const router = useRouter();
