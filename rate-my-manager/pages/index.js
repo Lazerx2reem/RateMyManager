@@ -102,9 +102,9 @@ export default function Home() {
   };
 
   return (
-    <div>
+    <div className="bg-purple-100 min-h-screen">
       <HomeNavbar />
-      <div className="flex justify-center">
+      <div className="flex justify-center ">
       <Image src="/logo.png" width={300} height={200} />
       </div>
 
@@ -123,8 +123,8 @@ export default function Home() {
           </button>
         </form>
       ) : (
-        <form onSubmit={handleManagerSubmit} className="flex flex-col items-center space-y-4">
-          <h2 className="text-xl font-semibold">Company: {companyName}</h2>
+        <form onSubmit={handleManagerSubmit} className="flex flex-col items-center space-y-4 bg-purple-100">
+          <h2 className="text-xl font-semibold ">Company: {companyName}</h2>
           <input
             type="text"
             placeholder="First Name"

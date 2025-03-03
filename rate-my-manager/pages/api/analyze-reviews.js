@@ -1,37 +1,49 @@
-// pages/api/analyze-reviews.js
-import OpenAI from "openai";
+import { OpenAI } from "openai"; 
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Store your API key in .env.local
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { reviews } = req.body;
 
   if (!reviews || reviews.length === 0) {
-    return res.status(400).json({ error: "No reviews provided" });
+    console.log("⚠️ No reviews provided.");
+    return res.status(400).json({ error: 'No reviews provided' });
   }
 
   try {
-    const reviewText = reviews.map((r) => `- ${r.comment} (Rating: ${r.rating}/5)`).join("\n");
+    const formattedReviews = reviews.map((r, i) => `- ${r.comment} (Rating: ${r.rating}/5)`).join("\n");
 
-    const prompt = `Analyze the following manager reviews and provide a one-line summary indicating whether they are mostly positive or mostly negative:\n\n${reviewText}`;
+    const prompt = `
+      Analyze the following manager reviews and provide key insights. Offer recommendations based on feedback and areas needing improvement:
+
+      Reviews:
+      ${formattedReviews}
+
+      Provide a structured summary with key observations and suggestions for improvement. Remove all the headings, only write it in a single paragraph manner. 
+    `;
+
+    console.log("🚀 Sending Prompt to OpenAI:", prompt);
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Ensure you're using the correct model
+      model: "gpt-4o-mini-2024-07-18",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 100,
+      temperature: 0.7,
+      max_tokens: 200, // Ensure response fits within limits
     });
 
-    const summary = response.choices[0]?.message?.content || "No summary available.";
+    console.log("✅ OpenAI API Response:", response);
 
-    return res.status(200).json({ summary });
+    const summaryText = response.choices?.[0]?.message?.content?.trim() || "No summary available.";
+    console.log("✅ Extracted Summary:", summaryText);
+
+    res.status(200).json({ summary: summaryText });
+
   } catch (error) {
-    console.error("Error generating summary:", error);
-    return res.status(500).json({ error: "Error generating summary" });
+    console.error("❌ OpenAI API Error:", error);
+    res.status(500).json({ error: 'Failed to generate review summary' });
   }
 }

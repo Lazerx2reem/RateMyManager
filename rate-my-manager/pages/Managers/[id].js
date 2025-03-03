@@ -148,16 +148,13 @@ export default function ManagerProfile() {
         const existingReviews = Array.isArray(managerData.reviews) ? managerData.reviews : [];
         const updatedReviews = [...existingReviews, review];
   
-        // Update reviews in the database
         await update(managerRef, { reviews: updatedReviews });
   
-        // Update local state for reviews
         setReviews(updatedReviews);
   
-        // Recalculate the average rating
+        // ✅ Call function to update rating
         calculateNewRating(updatedReviews);
   
-        // Clear the form inputs
         setNewReview("");
         setNewRating();
         setDepartment("");
@@ -171,7 +168,7 @@ export default function ManagerProfile() {
     }
   };
 
-  const calculateNewRating = (reviews) => {
+  const calculateNewRating = async (reviews) => {
     let totalRating = 0;
     let reviewCount = 0;
   
@@ -181,8 +178,17 @@ export default function ManagerProfile() {
     });
   
     const newRating = reviewCount > 0 ? totalRating / reviewCount : 0;
-    setRating(newRating); // Update the average rating in the state
+    setRating(newRating); // ✅ Update state
+  
+    // ✅ Store in Firebase
+    const managerRef = ref(database, `info/${manager.company}/managers/${id}`);
+    try {
+      await update(managerRef, { averageRating: newRating.toFixed(2) }); // ✅ Store new rating
+    } catch (error) {
+      console.error("Error updating average rating:", error);
+    }
   };
+  
 
   const fetchReviewSummary = async (reviews) => {
     if (reviews.length === 0) {
@@ -213,12 +219,21 @@ export default function ManagerProfile() {
     } else if (field === "worklife") {
       setWorkLife(value);
     }
+    console.log("Selected overtime:", overtime);
   };
 
   const getCircleClass = (selected, value) => {
     return selected === value
       ? "w-16 h-16 border-2 rounded-full flex items-center justify-center cursor-pointer bg-blue-200 text-white"
       : "w-16 h-16 border-2 rounded-full flex items-center justify-center cursor-pointer bg-white border-gray-400 text-gray-600";
+  };
+
+  const handleOvertimeClick = (value) => {
+    setOvertime(value);
+  };
+  
+  const handleMicromanagesClick = (value) => {
+    setMicromanages(value);
   };
 
   const renderCircleContent = (selected, value, type) => {
@@ -231,8 +246,8 @@ export default function ManagerProfile() {
           ? <span className="text-green-500">✔️</span>
           : <span className="text-red-500">❌</span>
         : value === "Yes"
-        ? <span className="text-green-500">Yes</span>
-        : <span className="text-red-500">No</span>;
+          ? <span className="text-green-500">Yes</span>
+          : <span className="text-red-500">No</span>;
     } else if (type === "worklife") {
       // Show the appropriate text inside the circle for work-life balance
       circleContent = selected === value
@@ -244,29 +259,30 @@ export default function ManagerProfile() {
           ? <span className="text-red-500">Bad</span>
           : null
         : value === "Good"
-        ? <span className="text-green-500">Good</span>
-        : value === "Fair"
-        ? <span className="text-yellow-500">Fair</span>
-        : value === "Bad"
-        ? <span className="text-red-500">Bad</span>
-        : null;
+          ? <span className="text-green-500">Good</span>
+          : value === "Fair"
+          ? <span className="text-yellow-500">Fair</span>
+          : value === "Bad"
+          ? <span className="text-red-500">Bad</span>
+          : null;
     }
   
     return circleContent;
   };
-
+  
+  
 
   if (!manager) return <div>Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 ">
+    <div className="min-h-screen bg-purple-100 ">
       <ManagerNavbar />
       <div className="container mx-auto flex flex-col lg:flex-row gap-10">
         <div className="mx-auto pt-20">
           <h1 className="text-3xl font-bold text-gray-800 text-center">{manager.name}</h1>
           <h3 className="text-lg text-gray-500 mt-2 text-center">Company: {manager.company}</h3>
           <h4 className="text-lg text-gray-600 mt-1 text-center">
-            Average Rating: {rating ? rating.toFixed(2) : "No ratings yet"} / 5
+          Average Rating: {rating ? rating.toFixed(2) : "No ratings yet"} / 5
           </h4>
           {/* Conditional Rendering based on the logged-in user's ID */}
           {uid == id ? (
@@ -334,42 +350,42 @@ export default function ManagerProfile() {
     </div>
 
     {/* Overtime Section */}
-    <div className="mb-6">
-      <h3 className="font-semibold text-left">Overtime</h3>
-      <div className="flex justify-between mt-2">
-        <div
-          onClick={() => handleCircleClick("overtime", "Yes")}
-          className={getCircleClass(overtime, "Yes")}
-        >
-          {renderCircleContent(overtime, "Yes", "overtime")}
-        </div>
-        <div
-          onClick={() => handleCircleClick("overtime", "No")}
-          className={getCircleClass(overtime, "No")}
-        >
-          {renderCircleContent(overtime, "No", "overtime")}
-        </div>
-      </div>
+<div className="mb-6">
+  <h3 className="font-semibold text-left">Overtime</h3>
+  <div className="flex justify-between mt-2">
+    <div
+      onClick={() => handleOvertimeClick("Yes")}
+      className={getCircleClass(overtime, "Yes")}
+    >
+      {renderCircleContent(overtime, "Yes", "overtime")}
     </div>
+    <div
+      onClick={() => handleOvertimeClick("No")}
+      className={getCircleClass(overtime, "No")}
+    >
+      {renderCircleContent(overtime, "No", "overtime")}
+    </div>
+  </div>
+</div>
 
-    {/* Micromanagement Section */}
-    <div className="mb-6">
-      <h3 className="font-semibold text-left">Micromanages</h3>
-      <div className="flex justify-between mt-2">
-        <div
-          onClick={() => handleCircleClick("micromanages", "Yes")}
-          className={getCircleClass(micromanages, "Yes")}
-        >
-          {renderCircleContent(micromanages, "Yes", "micromanages")}
-        </div>
-        <div
-          onClick={() => handleCircleClick("micromanages", "No")}
-          className={getCircleClass(micromanages, "No")}
-        >
-          {renderCircleContent(micromanages, "No", "micromanages")}
-        </div>
-      </div>
+{/* Micromanagement Section */}
+<div className="mb-6">
+  <h3 className="font-semibold text-left">Micromanages</h3>
+  <div className="flex justify-between mt-2">
+    <div
+      onClick={() => handleMicromanagesClick("Yes")}
+      className={getCircleClass(micromanages, "Yes")}
+    >
+      {renderCircleContent(micromanages, "Yes", "micromanages")}
     </div>
+    <div
+      onClick={() => handleMicromanagesClick("No")}
+      className={getCircleClass(micromanages, "No")}
+    >
+      {renderCircleContent(micromanages, "No", "micromanages")}
+    </div>
+  </div>
+</div>
 
     {/* Work-Life Balance Section */}
     <div className="mb-6">
@@ -401,7 +417,7 @@ export default function ManagerProfile() {
 </div>
 
 {/* Reviews List */}
-<div className="bg-white shadow-lg rounded-lg p-6  max-w-8xl flex-1 justify-center">
+<div className="bg-purple-100 shadow-lg rounded-lg p-6  max-w-8xl flex-1 justify-center">
   <h2 className="text-2xl font-semibold ">Reviews</h2>
   {reviews.length > 0 ? (
     reviews.map((review, index) => <ManagerReview key={index} review={review} />)
