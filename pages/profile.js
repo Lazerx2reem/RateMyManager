@@ -34,7 +34,7 @@ export default function Dashboard() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-purple-50">
       <h1 className="text-4xl font-bold text-purple-700 mb-4">Dashboard</h1>
       <div className="bg-white shadow-lg rounded-lg p-6 w-80 text-center">
-        <h2 className="text-2xl font-semibold text-purple-600">{user.displayName}</h2>
+        <h2 className="text-2xl font-semibold text-purple-600">{user.name}</h2>
         <p className="text-gray-600 mt-2">{user.email}</p>
         <button
           onClick={handleLogout}
