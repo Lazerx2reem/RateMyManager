@@ -34,6 +34,29 @@ const SignUp = () => {
     }
   };
 
+   // Handle Google Sign-In
+  const handleGoogleSignIn = async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+  
+        await setDoc(doc(db, "users", user.uid), {
+          name: user.displayName,
+          email: user.email,
+          isSubscribed: false, // Set initial subscription status
+          user_id: ''
+        });
+
+          router.push("/profile");
+        } catch (error) {
+        console.error("Google Sign-In Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    /*
+
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -52,6 +75,7 @@ const SignUp = () => {
       console.error("Google Sign-In Error:", err);
     }
   };
+*/
 
   return (
     <div>

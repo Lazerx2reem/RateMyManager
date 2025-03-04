@@ -25,6 +25,36 @@ const Login = () => {
     }
   };
 
+  // Handle Google Sign-In
+  const handleGoogleSignIn = async () => {
+    setLoading(true); // Prevent multiple clicks
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      const userRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        router.push("/profile");
+      } else {
+        // If the user doesn't exist, create a new record
+        await setDoc(userRef, {
+          name: user.displayName,
+          email: user.email,
+          isSubscribed: false,
+          user_id: null
+        });
+        router.push("/profile");}
+      } catch (error) {
+      console.error("Google Sign-In Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+/*
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -50,7 +80,7 @@ const Login = () => {
       console.error("Google Sign-In Error:", err);
     }
   };
-
+*/
   return (
     <div>
       <HomeNavbar />
