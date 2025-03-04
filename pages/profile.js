@@ -9,17 +9,31 @@ export default function Dashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    // Listen for user state changes
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
       if (currentUser) {
-        setUser(currentUser);
+        try {
+          const userRef = doc(db, "users", currentUser.uid);
+          const userDoc = await getDoc(userRef);
+          if (userDoc.exists()) {
+            setUserName(userDoc.data().name); // Set name from Firestore
+          } else {
+            setUserName("User"); // Fallback name if not found
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          setUserName("User"); // Fallback in case of error
+        } finally {
+          setLoading(false); // Stop loading after fetching user data
+        }
       } else {
-        router.push("/auth/login"); // Redirect if not logged in
+        setUserName(null); // Reset name if no user is logged in
+        setLoading(false); // Stop loading when there's no user
       }
     });
 
-    return () => unsubscribe();
-  }, [router]);
+    return () => unsubscribe(); // Cleanup the auth state listener
+  }, []);
 
   const handleLogout = async () => {
     await signOut(auth);
