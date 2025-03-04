@@ -19,7 +19,7 @@ const Login = () => {
     setError("");
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/home"); // Redirect after login
+      router.push("/profile"); // Redirect after login
     } catch (err) {
       setError(err.message);
     }
