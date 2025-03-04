@@ -11,8 +11,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "No reviews provided" });
   }
 
+  // ✅ Debugging step
+  console.log("OpenAI API Key:", process.env.OPENAI_API_KEY ? "Key Exists" : "Key MISSING");
+
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY }); // ✅ New OpenAI API call
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const reviewText = reviews.map((r) => `- ${r.comment} (Rating: ${r.rating}/5)`).join("\n");
 
@@ -24,12 +27,11 @@ export default async function handler(req, res) {
       max_tokens: 50, 
     });
 
-    console.log("OpenAI API Key:", process.env.OPENAI_API_KEY);
-
     const summary = response.choices[0]?.message?.content || "No summary available.";
 
     return res.status(200).json({ summary });
   } catch (error) {
+    console.error("OpenAI API Error:", error);
     return res.status(500).json({ error: "Error generating summary" });
   }
 }
