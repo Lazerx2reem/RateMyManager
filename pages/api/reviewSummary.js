@@ -24,6 +24,8 @@ export default async function handler(req, res) {
       max_tokens: 50, 
     });
 
+    console.log("OpenAI API Key:", process.env.OPENAI_API_KEY);
+
     const summary = response.choices[0]?.message?.content || "No summary available.";
 
     return res.status(200).json({ summary });
